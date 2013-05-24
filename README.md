@@ -7,7 +7,7 @@ Based on version 0.8.11 of [wo-xmldoclet](https://code.google.com/p/wo-xmldoclet
 
 Maintained by Johan Johansson of [Bazooka](http://bazooka.se). To contact us, please e-mail info@bazooka.se.
 
-For the latest code, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
+This file in part of version **1.2.0 (24 May 2013)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
 
 What it does
 ------------
@@ -32,8 +32,6 @@ Here's how to compile the files standing in the project root (make sure build fo
 Then use the following syntax to compile the class files into a jar standing in the build folder:
 
     jar -cf bazooka-wo-xmldoclet.jar org
-
-**You can also download a version-specific jar in the files section here on github.**
 
 How to use
 ----------
