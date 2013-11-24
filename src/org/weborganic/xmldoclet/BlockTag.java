@@ -37,29 +37,6 @@ public enum BlockTag implements Taglet {
 
   },
 
-  DEPRECATED("deprecated", false){
-
-    @Override
-    public XMLNode toXMLNode(Tag tag) {
-      return new XMLNode("deprecated").text(tag.text());
-    }
-
-    @Override
-    public String toString(Tag tag) {
-      return tag.text();
-    }
-
-    @Override
-    public String toString(Tag[] tags) {
-      StringBuilder out = new StringBuilder();
-      for (Tag t : tags) {
-        out.append(toString(t));
-      }
-      return out.toString();
-    }
-
-  },
-
   SERIAL("serial", false){
 
     @Override

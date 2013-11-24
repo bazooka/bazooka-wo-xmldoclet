@@ -313,6 +313,9 @@ public final class XMLDoclet {
     node.child(toShortComment(classDoc));
     node.child(toComment(classDoc));
 
+    // Deprecated
+    toDeprecated(classDoc, node);
+
      // Inheritance tree
     XMLNode inheritance = new XMLNode("inheritance");
     ClassDoc superClass = classDoc.superclass();
@@ -375,6 +378,9 @@ public final class XMLDoclet {
     node.child(toShortComment(field));
     node.child(toComment(field));
 
+    // Deprecated
+    toDeprecated(field, node);
+
     // Other child nodes
     node.child(toStandardTags(field));
     node.child(toTags(field));
@@ -399,6 +405,7 @@ public final class XMLDoclet {
     for (ConstructorDoc  constructor : constructors) {
       XMLNode c = new XMLNode("constructor");
       updateExecutableMemberNode(constructor, c);
+      toDeprecated(constructor, c);
       node.child(c);
     }
 
@@ -436,6 +443,9 @@ public final class XMLDoclet {
         returnNode.text(toComment(returnTags[0]));
         methodNode.child(returnNode);
       }
+
+      // Deprecated
+      toDeprecated(method, methodNode);
 
       node.child(methodNode);
     }
@@ -806,6 +816,45 @@ public final class XMLDoclet {
     }
 
     return comment.toString();
+  }
+
+  /**
+   * Transforms deprecated tags on the Doc object into XML.
+   *
+   * @param doc The Doc object.
+   * @param node The node to add the deprecated nodes to.
+   */
+  private static XMLNode toDeprecated(Doc doc, XMLNode node) {
+      Tag[] deprecatedTags = doc.tags("@deprecated");
+
+      if (deprecatedTags.length > 0) {
+        StringBuilder shortText = new StringBuilder();
+
+        // Analyse each token and produce text node
+        for (Tag t : deprecatedTags[0].firstSentenceTags()) {
+          Taglet taglet = options.getTagletForName(t.name());
+          if (taglet != null) shortText.append(taglet.toString(t));
+          else shortText.append(t.text());
+        }
+
+        if (shortText.length() == 0) {
+          shortText.append("Deprecated.");
+        }
+
+        String fullText = toComment(deprecatedTags[0]);
+        fullText = fullText != null ? fullText.substring(shortText.length()).trim() : "";
+
+        XMLNode shortNode = new XMLNode("shortDeprecated", doc, doc.position().line());
+        XMLNode fullNode = new XMLNode("deprecated", doc, doc.position().line());
+
+        shortNode.text(shortText.toString());
+        fullNode.text(fullText);
+
+        node.child(shortNode);
+        node.child(fullNode);
+      }
+
+      return null;
   }
 
   /**

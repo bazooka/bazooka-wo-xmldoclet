@@ -7,7 +7,7 @@ Based on version 0.8.11 of [wo-xmldoclet](https://code.google.com/p/wo-xmldoclet
 
 Maintained by Johan Johansson of [Bazooka](http://bazooka.se). To contact us, please e-mail info@bazooka.se.
 
-This file in part of version **1.2.0 (24 May 2013)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
+This file is part of version **1.2.1 (24 November 2013)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
 
 What it does
 ------------
@@ -54,3 +54,8 @@ List of modifications of the original doclet
 * Adds method attributes (is varargs).
 * Adds comments on @returns tag.
 * Generalizes inline @link and @see tags to share a common format, with more information about the link.
+
+Changelog
+---------
+1.2.1
+* Added support for the deprecated tag (renders a shortDeprecated and a deprecated tag for relevant elements).
