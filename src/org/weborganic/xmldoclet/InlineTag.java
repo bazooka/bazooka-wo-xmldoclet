@@ -9,6 +9,7 @@ package org.weborganic.xmldoclet;
 
 import com.sun.javadoc.Doc;
 import com.sun.javadoc.PackageDoc;
+import com.sun.javadoc.FieldDoc;
 import com.sun.javadoc.Tag;
 import com.sun.javadoc.SeeTag;
 import com.sun.tools.doclets.Taglet;
@@ -157,7 +158,7 @@ public enum InlineTag implements Taglet {
 
     @Override
     public String toString(Tag tag) {
-      return "<var>"+tag.text()+"</var>";
+      return "<var>"+toValueString(tag)+"</var>";
     }
 
   };
@@ -413,5 +414,32 @@ public enum InlineTag implements Taglet {
 
     html.append('>').append(label).append("</a>");
     return html.toString();
+  }
+
+  /**
+   * Returns the constant value string for a value tag.
+   *
+   * @param tag the value tag to process.
+   * @return the corresponding HTML
+   */
+  public static String toValueString(Tag tag) {
+    String text = tag.text();
+    System.out.println(tag.getClass().getName());
+
+    if (text == null || text.length() == 0) {
+      // extract constant value of this field
+      Doc holder = tag.holder();
+
+      if (holder != null && holder instanceof FieldDoc) {
+        return ((FieldDoc)holder).constantValueExpression();
+      }
+    } else {
+      //TODO:
+      // fetch the constant value of the field that this value tag is referencing
+      // and create a link there
+      return toLinkString(tag, "link");
+    }
+
+    return "";
   }
 }
