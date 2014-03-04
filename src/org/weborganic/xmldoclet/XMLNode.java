@@ -372,6 +372,7 @@ public final class XMLNode {
     tidy.setTrimEmptyElements(false);
     tidy.setDropProprietaryAttributes(false);
     tidy.setErrout(VOID_WRITER);
+    tidy.setWraplen(0);
 
     // Tidy wants a full HTML document...
     StringBuilder in = new StringBuilder();
