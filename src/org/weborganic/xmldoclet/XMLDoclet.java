@@ -444,6 +444,9 @@ public final class XMLDoclet {
         methodNode.child(returnNode);
       }
 
+      // standard block tags
+      methodNode.child(toStandardTags(method));
+
       // Deprecated
       toDeprecated(method, methodNode);
 
