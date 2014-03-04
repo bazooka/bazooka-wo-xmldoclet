@@ -405,6 +405,9 @@ public final class XMLDoclet {
     for (ConstructorDoc  constructor : constructors) {
       XMLNode c = new XMLNode("constructor");
       updateExecutableMemberNode(constructor, c);
+      // standard block tags
+      c.child(toStandardTags(constructor));
+      // deprecated
       toDeprecated(constructor, c);
       node.child(c);
     }
