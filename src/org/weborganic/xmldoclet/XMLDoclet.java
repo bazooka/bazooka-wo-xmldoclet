@@ -440,6 +440,11 @@ public final class XMLDoclet {
       methodNode.attribute("abstract", method.isAbstract());
       methodNode.attribute("varargs", method.isVarArgs());
 
+      MethodDoc overrides = method.overriddenMethod();
+      if (overrides != null) {
+        methodNode.attribute("overrides", overrides.toString());
+      }
+
       Tag[] returnTags = method.tags("@return");
       if (returnTags.length > 0) {
         XMLNode returnNode = new XMLNode("returns");
