@@ -63,6 +63,8 @@ public final class XMLDoclet {
    */
   private static Options options = null;
 
+  public static RootDoc root;
+
   /**
    * Processes the JavaDoc documentation.
    *
@@ -75,6 +77,8 @@ public final class XMLDoclet {
    * @return <code>true</code> if processing was successful.
    */
   public static boolean start(RootDoc root) {
+    XMLDoclet.root = root;
+
     // Create the root node.
     List<XMLNode> nodes = toXMLNodes(root);
 

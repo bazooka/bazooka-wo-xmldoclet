@@ -8,11 +8,16 @@
 package org.weborganic.xmldoclet;
 
 import com.sun.javadoc.Doc;
+import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.PackageDoc;
+import com.sun.javadoc.ProgramElementDoc;
 import com.sun.javadoc.FieldDoc;
+import com.sun.javadoc.MemberDoc;
+import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.Tag;
 import com.sun.javadoc.SeeTag;
 import com.sun.tools.doclets.Taglet;
+import java.util.StringTokenizer;
 
 /**
  * A collection of taglets to support the standard javadoc inline tags.
@@ -158,7 +163,7 @@ public enum InlineTag implements Taglet {
 
     @Override
     public String toString(Tag tag) {
-      return "<var>"+toValueString(tag)+"</var>";
+      return toValueString(tag);
     }
 
   };
@@ -268,7 +273,17 @@ public enum InlineTag implements Taglet {
     } else {
       // Get package from doc
       Doc doc = tag.holder();
+
+      if (doc instanceof ProgramElementDoc) {
+        PackageDoc parentPackage = ((ProgramElementDoc)doc).containingPackage();
+
+        if (parentPackage != null && parentPackage.name().length() > 0) {
+          return parentPackage.name();
+        }
+      }
+
       spec = doc.toString();
+
       if (doc.isClass() || doc.isMethod() || doc.isConstructor() || doc.isAnnotationType() || doc.isEnum()) {
         dot = spec.lastIndexOf('.');
       }
@@ -398,21 +413,26 @@ public enum InlineTag implements Taglet {
     }
 
     // generate HTML link
+    return toLinkString(spec, label, css, type, p, c, m);
+  }
+
+  public static String toLinkString(String url, String label, String cssClass, String type, String packageName, String className, String memberName) {
     StringBuilder html = new StringBuilder();
-    html.append("<a href=\"").append(spec).append("\" title=\"").append(label).append('"');
-    html.append(" class=\"").append(css).append('"');
-    html.append(" data-type=\"").append(type).append('"');
-    html.append(" data-package=\"").append(p).append('"');
 
-    if (c != null && c.length() > 0) {
-      html.append(" data-class=\"").append(c).append('"');
+    html.append("<a href=\"").append(url).append("\" title=\"").append(XMLNode.encodeAttribute(label)).append('"');
+    html.append(" class=\"").append(XMLNode.encodeAttribute(cssClass)).append('"');
+    html.append(" data-type=\"").append(XMLNode.encodeAttribute(type)).append('"');
+    html.append(" data-package=\"").append(XMLNode.encodeAttribute(packageName)).append('"');
+
+    if (className != null && className.length() > 0) {
+      html.append(" data-class=\"").append(XMLNode.encodeAttribute(className)).append('"');
     }
 
-    if (m != null && m.length() > 0) {
-      html.append(" data-member=\"").append(m).append('"');
+    if (memberName != null && memberName.length() > 0) {
+      html.append(" data-member=\"").append(XMLNode.encodeAttribute(memberName)).append('"');
     }
 
-    html.append('>').append(label).append("</a>");
+    html.append('>').append(XMLNode.encodeElement(label)).append("</a>");
     return html.toString();
   }
 
@@ -424,7 +444,6 @@ public enum InlineTag implements Taglet {
    */
   public static String toValueString(Tag tag) {
     String text = tag.text();
-    System.out.println(tag.getClass().getName());
 
     if (text == null || text.length() == 0) {
       // extract constant value of this field
@@ -433,13 +452,71 @@ public enum InlineTag implements Taglet {
       if (holder != null && holder instanceof FieldDoc) {
         return ((FieldDoc)holder).constantValueExpression();
       }
-    } else {
-      //TODO:
-      // fetch the constant value of the field that this value tag is referencing
-      // and create a link there
-      return toLinkString(tag, "link");
+    }
+
+    Doc member = getMemberFromString(text, "field", tag);
+
+    if (member != null && member instanceof FieldDoc) {
+      FieldDoc field = (FieldDoc)member;
+      String value = field.constantValueExpression();
+      return toLinkString(text, value, "link", "member", field.containingPackage().name(), field.containingClass().name(), field.name());
     }
 
     return "";
+  }
+
+  /**
+   * Parses a reference to a qualified or partially qualified type name and returns the Doc for it.
+   * Does not support unqualified nested class types.
+   * E.g. #myField, SomeClass#myField, some.package.SomeClass#myField, some.package.SomeClass.NestedClass#myField
+   *
+   * @param  name type name
+   * @param memberType field, method, etc
+   * @param tag the containing tag
+   * @return      [description]
+   */
+  public static Doc getMemberFromString(String name, String memberType, Tag tag) {
+    StringTokenizer st = new StringTokenizer(name, "#");
+    String memberName = null;
+    ClassDoc cd = null;
+    if (st.countTokens() == 1) {
+        //Case 2:  @value in same class.
+        Doc holder = tag.holder();
+        if (holder instanceof MemberDoc) {
+            cd = ((MemberDoc) holder).containingClass();
+        } else if (holder instanceof ClassDoc) {
+            cd = (ClassDoc) holder;
+        }
+        memberName = st.nextToken();
+    } else {
+        //Case 3: @value in different class.
+
+        // might be fully qualified or not (package or no package)
+        String className = st.nextToken();
+
+        // check for fq name else add local package
+        if (className.indexOf('.') == -1) {
+          // NOTE: doesn't work with unqualified nested classes (duh)
+          Doc holder = tag.holder();
+
+          if (holder instanceof ProgramElementDoc) {
+            className = ((ProgramElementDoc)holder).containingPackage().name() + "." + className;
+          }
+        }
+
+        cd = XMLDoclet.root.classNamed(className);
+        memberName = st.nextToken();
+    }
+
+    if (memberType.equals("field")) {
+      FieldDoc[] fields = cd.fields();
+      for (int i = 0; i < fields.length; i++) {
+          if (fields[i].name().equals(memberName)) {
+              return fields[i];
+          }
+      }
+    }
+
+    return null;
   }
 }
