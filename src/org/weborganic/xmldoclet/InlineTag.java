@@ -11,6 +11,7 @@ import com.sun.javadoc.Doc;
 import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.PackageDoc;
 import com.sun.javadoc.ProgramElementDoc;
+import com.sun.javadoc.ExecutableMemberDoc;
 import com.sun.javadoc.FieldDoc;
 import com.sun.javadoc.MemberDoc;
 import com.sun.javadoc.ClassDoc;
@@ -242,8 +243,11 @@ public enum InlineTag implements Taglet {
    */
   private static String getLinkSpec(Tag tag) {
     String text = tag.text();
-    int space = text.indexOf(' ');
-    return space >= 0? text.substring(0, space) : text;
+    return text.replaceAll("^([^#]*#)?([^\\s]+\\([^)]+\\)|([^\\s]+)).*", "$1$2");
+  }
+
+  private static String getLinkLabel(Tag tag) {
+    return tag.text().replace(getLinkSpec(tag), "").trim();
   }
 
   /**
@@ -377,9 +381,13 @@ public enum InlineTag implements Taglet {
   public static String toLinkString(Tag tag, String css) {
     // extract spec and label
     String text = tag.text();
-    int space = text.indexOf(' ');
-    String spec  = (space > 0)? text.substring(0, space) : text;
-    String label = (space > 0)? text.substring(space+1) : text;
+
+    String spec  = getLinkSpec(tag);
+    String label = getLinkLabel(tag);
+    String p = getLinkPackage(tag);
+    String c = getClassName(tag);
+    String m = getLinkMember(tag);
+    String qm = null;
 
     // analyse spec
     String type = "unknown";
@@ -387,11 +395,14 @@ public enum InlineTag implements Taglet {
     if (tag instanceof SeeTag) {
       SeeTag seeTag = (SeeTag)tag;
       type = seeTag.referencedMember() != null ? "member" : seeTag.referencedClass() != null ? "class" : seeTag.referencedPackage() != null ? "package" : "unknown";
+
+      if (seeTag.referencedMember() != null && seeTag.referencedMember() instanceof ExecutableMemberDoc) {
+        ExecutableMemberDoc memberDoc = (ExecutableMemberDoc)seeTag.referencedMember();
+        qm = memberDoc.name() + memberDoc.signature();
+        // spec = spec.replace(m, qm);
+      }
     }
 
-    String p = getLinkPackage(tag);
-    String c = getClassName(tag);
-    String m = getLinkMember(tag);
     label = getLabel(tag);
 
     if (c.equals(p)) {
@@ -409,6 +420,8 @@ public enum InlineTag implements Taglet {
         label = c;
       } else if (p != null && p.length() > 0) {
         label = p;
+      } else {
+        label = spec;
       }
     }
 
@@ -419,7 +432,7 @@ public enum InlineTag implements Taglet {
   public static String toLinkString(String url, String label, String cssClass, String type, String packageName, String className, String memberName) {
     StringBuilder html = new StringBuilder();
 
-    html.append("<a href=\"").append(url).append("\" title=\"").append(XMLNode.encodeAttribute(label)).append('"');
+    html.append("<a href=\"").append(XMLNode.encodeAttribute(url)).append("\" title=\"").append(XMLNode.encodeAttribute(label)).append('"');
     html.append(" class=\"").append(XMLNode.encodeAttribute(cssClass)).append('"');
     html.append(" data-type=\"").append(XMLNode.encodeAttribute(type)).append('"');
     html.append(" data-package=\"").append(XMLNode.encodeAttribute(packageName)).append('"');
