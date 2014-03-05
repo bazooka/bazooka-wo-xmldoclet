@@ -711,15 +711,20 @@ public final class XMLDoclet {
           see.attribute("class", cls);
         }
 
-        if (mbr != null && mbr.length() > 0) {
-          if (tag.referencedMember() != null && tag.referencedMember().isMethod()) {
-            if (!mbr.endsWith(")")) {
-              mbr += "()";
-            }
+        String label = tag.label();
+
+        if (tag.referencedMember() != null && tag.referencedMember() instanceof ExecutableMemberDoc) {
+          ExecutableMemberDoc memberDoc = (ExecutableMemberDoc)tag.referencedMember();
+          mbr = memberDoc.name() + memberDoc.signature();
+
+          if (label == null || label.length() == 0) {
+            label = memberDoc.name() + memberDoc.flatSignature();
           }
 
-          see.attribute("member", mbr.replace(",", ", "));
+          see.attribute("member", mbr);
         }
+
+        see.attribute("title", label);
       }
     }
 

@@ -410,7 +410,7 @@ public enum InlineTag implements Taglet {
     }
 
     if (m != null && m.length() > 0) {
-      m = m.replace(",", ", ");
+      m = m.replaceAll(",([^\\s])", ", $1");
     }
 
     if (label == null || label.length() < 1) {
@@ -426,7 +426,7 @@ public enum InlineTag implements Taglet {
     }
 
     // generate HTML link
-    return toLinkString(spec, label, css, type, p, c, m);
+    return toLinkString(spec, label, css, type, p, c, qm);
   }
 
   public static String toLinkString(String url, String label, String cssClass, String type, String packageName, String className, String memberName) {
