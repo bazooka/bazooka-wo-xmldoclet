@@ -399,7 +399,7 @@ public enum InlineTag implements Taglet {
       if (seeTag.referencedMember() != null && seeTag.referencedMember() instanceof ExecutableMemberDoc) {
         ExecutableMemberDoc memberDoc = (ExecutableMemberDoc)seeTag.referencedMember();
         qm = memberDoc.name() + memberDoc.signature();
-        // spec = spec.replace(m, qm);
+        spec = spec.replace(m, qm);
       }
     }
 
