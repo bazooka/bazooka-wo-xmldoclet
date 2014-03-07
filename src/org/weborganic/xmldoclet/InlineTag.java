@@ -387,7 +387,7 @@ public enum InlineTag implements Taglet {
     String p = getLinkPackage(tag);
     String c = getClassName(tag);
     String m = getLinkMember(tag);
-    String qm = null;
+    String qm = m;
 
     // analyse spec
     String type = "unknown";

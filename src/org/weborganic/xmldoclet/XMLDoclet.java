@@ -720,7 +720,9 @@ public final class XMLDoclet {
           if (label == null || label.length() == 0) {
             label = memberDoc.name() + memberDoc.flatSignature();
           }
+        }
 
+        if (mbr != null && mbr.length() > 0) {
           see.attribute("member", mbr);
         }
 
