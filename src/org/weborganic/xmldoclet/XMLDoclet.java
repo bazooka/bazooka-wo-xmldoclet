@@ -50,6 +50,7 @@ import com.sun.tools.doclets.Taglet;
  * @version 24 May 2013
  */
 public final class XMLDoclet {
+  public final static String VERSION = "1.3.0";
 
   /**
    * The date format matching ISO 8601, easier to parse with XSLT.
@@ -154,6 +155,9 @@ public final class XMLDoclet {
     DateFormat df = new SimpleDateFormat(ISO_8601);
     meta.attribute("created", df.format(new Date()));
 
+    XMLNode meta2 = new XMLNode("meta");
+    meta2.attribute("generator", VERSION);
+
     // Multiple files
     if (options.useMultipleFiles()) {
       for (XMLNode node : nodes) {
@@ -171,6 +175,7 @@ public final class XMLDoclet {
         XMLNode root = new XMLNode("root");
         root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
         root.child(meta);
+        root.child(meta2);
         root.child(node);
         String fileName = name + ".xml";
         root.save(dir, fileName, options.getEncoding(), "");
@@ -179,6 +184,7 @@ public final class XMLDoclet {
       XMLNode root = new XMLNode("root");
       root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
       root.child(meta);
+      root.child(meta2);
       for (XMLNode node : nodes) {
         String name = node.getAttribute("name");
         if (options.useSubFolders()) name = name.replace('.', '/');
@@ -196,6 +202,7 @@ public final class XMLDoclet {
       XMLNode root = new XMLNode("root");
       root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
       root.child(meta);
+      root.child(meta2);
       for (XMLNode node : nodes) {
         root.child(node);
       }

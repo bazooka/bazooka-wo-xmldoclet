@@ -7,7 +7,7 @@ Based on version 0.8.11 of [wo-xmldoclet](https://code.google.com/p/wo-xmldoclet
 
 Maintained by Johan Johansson of [Bazooka](http://bazooka.se). To contact us, please e-mail info@bazooka.se.
 
-This file is part of version **1.3.0 (05 March 2014)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
+This file is part of version **1.3.0 (06 March 2014)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
 
 What it does
 ------------
