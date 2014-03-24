@@ -318,7 +318,7 @@ public final class XMLNode {
    * @param in The input string.
    * @return The encoded string.
    */
-  private static String encodeElement(String in) {
+  public static String encodeElement(String in) {
     final int length = in.length();
     StringBuilder out = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
@@ -339,7 +339,7 @@ public final class XMLNode {
    * @param in The input string.
    * @return The encoded string.
    */
-  private static String encodeAttribute(String in) {
+  public static String encodeAttribute(String in) {
     final int length = in.length();
     StringBuilder out = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
@@ -372,6 +372,7 @@ public final class XMLNode {
     tidy.setTrimEmptyElements(false);
     tidy.setDropProprietaryAttributes(false);
     tidy.setErrout(VOID_WRITER);
+    tidy.setWraplen(0);
 
     // Tidy wants a full HTML document...
     StringBuilder in = new StringBuilder();

@@ -50,6 +50,7 @@ import com.sun.tools.doclets.Taglet;
  * @version 24 May 2013
  */
 public final class XMLDoclet {
+  public final static String VERSION = "1.3.0";
 
   /**
    * The date format matching ISO 8601, easier to parse with XSLT.
@@ -63,6 +64,8 @@ public final class XMLDoclet {
    */
   private static Options options = null;
 
+  public static RootDoc root;
+
   /**
    * Processes the JavaDoc documentation.
    *
@@ -75,6 +78,8 @@ public final class XMLDoclet {
    * @return <code>true</code> if processing was successful.
    */
   public static boolean start(RootDoc root) {
+    XMLDoclet.root = root;
+
     // Create the root node.
     List<XMLNode> nodes = toXMLNodes(root);
 
@@ -150,6 +155,9 @@ public final class XMLDoclet {
     DateFormat df = new SimpleDateFormat(ISO_8601);
     meta.attribute("created", df.format(new Date()));
 
+    XMLNode meta2 = new XMLNode("meta");
+    meta2.attribute("generator", VERSION);
+
     // Multiple files
     if (options.useMultipleFiles()) {
       for (XMLNode node : nodes) {
@@ -167,6 +175,7 @@ public final class XMLDoclet {
         XMLNode root = new XMLNode("root");
         root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
         root.child(meta);
+        root.child(meta2);
         root.child(node);
         String fileName = name + ".xml";
         root.save(dir, fileName, options.getEncoding(), "");
@@ -175,6 +184,7 @@ public final class XMLDoclet {
       XMLNode root = new XMLNode("root");
       root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
       root.child(meta);
+      root.child(meta2);
       for (XMLNode node : nodes) {
         String name = node.getAttribute("name");
         if (options.useSubFolders()) name = name.replace('.', '/');
@@ -192,6 +202,7 @@ public final class XMLDoclet {
       XMLNode root = new XMLNode("root");
       root.attribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
       root.child(meta);
+      root.child(meta2);
       for (XMLNode node : nodes) {
         root.child(node);
       }
@@ -405,6 +416,9 @@ public final class XMLDoclet {
     for (ConstructorDoc  constructor : constructors) {
       XMLNode c = new XMLNode("constructor");
       updateExecutableMemberNode(constructor, c);
+      // standard block tags
+      c.child(toStandardTags(constructor));
+      // deprecated
       toDeprecated(constructor, c);
       node.child(c);
     }
@@ -437,12 +451,20 @@ public final class XMLDoclet {
       methodNode.attribute("abstract", method.isAbstract());
       methodNode.attribute("varargs", method.isVarArgs());
 
+      MethodDoc overrides = method.overriddenMethod();
+      if (overrides != null) {
+        methodNode.attribute("overrides", overrides.toString());
+      }
+
       Tag[] returnTags = method.tags("@return");
       if (returnTags.length > 0) {
         XMLNode returnNode = new XMLNode("returns");
         returnNode.text(toComment(returnTags[0]));
         methodNode.child(returnNode);
       }
+
+      // standard block tags
+      methodNode.child(toStandardTags(method));
 
       // Deprecated
       toDeprecated(method, methodNode);
@@ -696,15 +718,22 @@ public final class XMLDoclet {
           see.attribute("class", cls);
         }
 
-        if (mbr != null && mbr.length() > 0) {
-          if (tag.referencedMember() != null && tag.referencedMember().isMethod()) {
-            if (!mbr.endsWith(")")) {
-              mbr += "()";
-            }
-          }
+        String label = tag.label();
 
-          see.attribute("member", mbr.replace(",", ", "));
+        if (tag.referencedMember() != null && tag.referencedMember() instanceof ExecutableMemberDoc) {
+          ExecutableMemberDoc memberDoc = (ExecutableMemberDoc)tag.referencedMember();
+          mbr = memberDoc.name() + memberDoc.signature();
+
+          if (label == null || label.length() == 0) {
+            label = memberDoc.name() + memberDoc.flatSignature();
+          }
         }
+
+        if (mbr != null && mbr.length() > 0) {
+          see.attribute("member", mbr);
+        }
+
+        see.attribute("title", label);
       }
     }
 

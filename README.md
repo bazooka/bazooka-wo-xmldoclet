@@ -7,7 +7,7 @@ Based on version 0.8.11 of [wo-xmldoclet](https://code.google.com/p/wo-xmldoclet
 
 Maintained by Johan Johansson of [Bazooka](http://bazooka.se). To contact us, please e-mail info@bazooka.se.
 
-This file is part of version **1.2.1 (24 November 2013)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
+This file is part of version **1.3.0 (06 March 2014)**. For the latest version, please go to the official github page: https://github.com/bazooka/bazooka-wo-xmldoclet.
 
 What it does
 ------------
@@ -53,9 +53,18 @@ List of modifications of the original doclet
 * Adds type dimension information.
 * Adds method attributes (is varargs).
 * Adds comments on @returns tag.
+* Adds support for a number of tags such as @value, @deprecated, @since (and more).
 * Generalizes inline @link and @see tags to share a common format, with more information about the link.
+* ..And a lot more!
 
 Changelog
 ---------
+1.3.0
+* Fixed a few bugs with the @see and @link tag URL building (generate fully qualified type names in the URL).
+* Added a few missing tags such as @since and @value.
+* Added standard block tags for constructors.
+* Added information about a method's overridden parent.
+* Disabled the JTidy word wrap (screwed up pre tags among other things).
+
 1.2.1
 * Added support for the deprecated tag (renders a shortDeprecated and a deprecated tag for relevant elements).
