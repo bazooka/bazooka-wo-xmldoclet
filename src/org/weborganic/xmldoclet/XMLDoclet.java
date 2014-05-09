@@ -38,6 +38,7 @@ import com.sun.javadoc.SeeTag;
 import com.sun.javadoc.Tag;
 import com.sun.javadoc.Type;
 import com.sun.javadoc.ThrowsTag;
+import com.sun.javadoc.TypeVariable;
 import com.sun.tools.doclets.Taglet;
 
 /**
@@ -289,6 +290,35 @@ public final class XMLDoclet {
     node.attribute("name",       classDoc.qualifiedName());
     node.attribute("package",    classDoc.containingPackage().name());
     node.attribute("visibility", getVisibility(classDoc));
+
+    TypeVariable[] typeParameters = classDoc.typeParameters();
+    ParamTag[] typeParameterTags = classDoc.typeParamTags();
+
+    if (typeParameters != null && typeParameters.length > 0) {
+      String typeParams = "";
+
+      for (TypeVariable i : typeParameters) {
+        typeParams += i.qualifiedTypeName() + ", ";
+      }
+
+      typeParams = typeParams.replaceAll(",\\s?$", "");
+      node.attribute("typeparams", typeParams);
+    }
+
+    if (typeParameterTags != null && typeParameterTags.length > 0) {
+      XMLNode paramTagsNode = new XMLNode("typeParameters");
+
+      for (ParamTag i : typeParameterTags) {
+        XMLNode paramNode = new XMLNode("parameter");
+
+        paramNode.attribute("name", i.parameterName());
+        paramNode.attribute("comment", i.parameterComment());
+
+        paramTagsNode.child(paramNode);
+      }
+
+      node.child(paramTagsNode);
+    }
 
     // Interfaces
     ClassDoc[] interfaces = classDoc.interfaces();
