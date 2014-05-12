@@ -291,34 +291,8 @@ public final class XMLDoclet {
     node.attribute("package",    classDoc.containingPackage().name());
     node.attribute("visibility", getVisibility(classDoc));
 
-    TypeVariable[] typeParameters = classDoc.typeParameters();
-    ParamTag[] typeParameterTags = classDoc.typeParamTags();
-
-    if (typeParameters != null && typeParameters.length > 0) {
-      String typeParams = "";
-
-      for (TypeVariable i : typeParameters) {
-        typeParams += i.qualifiedTypeName() + ", ";
-      }
-
-      typeParams = typeParams.replaceAll(",\\s?$", "");
-      node.attribute("typeparams", typeParams);
-    }
-
-    if (typeParameterTags != null && typeParameterTags.length > 0) {
-      XMLNode paramTagsNode = new XMLNode("typeParameters");
-
-      for (ParamTag i : typeParameterTags) {
-        XMLNode paramNode = new XMLNode("parameter");
-
-        paramNode.attribute("name", i.parameterName());
-        paramNode.attribute("comment", i.parameterComment());
-
-        paramTagsNode.child(paramNode);
-      }
-
-      node.child(paramTagsNode);
-    }
+    // generic type parameters
+    node.child(toTypeParametersNode(classDoc));
 
     // Interfaces
     ClassDoc[] interfaces = classDoc.interfaces();
@@ -384,6 +358,69 @@ public final class XMLDoclet {
     // Handle inner classes
     for (ClassDoc inner : classDoc.innerClasses()) {
       node.child(toClassNode(inner));
+    }
+
+    return node;
+  }
+
+  /**
+   * Generates a child node for each generic type parameter.
+   * @param  doc [description]
+   * @return     [description]
+   */
+  private static XMLNode toTypeParametersNode(ClassDoc doc) {
+    TypeVariable[] typeParameters = doc.typeParameters();
+    ParamTag[] typeParameterTags = doc.typeParamTags();
+
+    XMLNode node = null;
+
+    if (typeParameters != null && typeParameters.length > 0) {
+      node = new XMLNode("typeParameters");
+
+      for (TypeVariable i : typeParameters) {
+        XMLNode paramNode = new XMLNode("parameter");
+        paramNode.attribute("name", i.typeName());
+
+        Type[] bounds = i.bounds();
+
+        if (bounds != null && bounds.length > 0) {
+          XMLNode boundsNode = new XMLNode("bounds");
+
+          for (Type t : bounds) {
+            XMLNode typeNode = new XMLNode("type");
+
+            typeNode.attribute("fulltype", t.toString());
+            typeNode.attribute("type", t.typeName());
+            typeNode.attribute("name", t.qualifiedTypeName());
+
+            boundsNode.child(typeNode);
+          }
+
+          paramNode.child(boundsNode);
+        }
+
+        if (typeParameterTags != null && typeParameterTags.length > 0) {
+          ParamTag tag = null;
+
+          for (ParamTag j : typeParameterTags) {
+            // take the first one
+            if (j.isTypeParameter() && j.parameterName().equals(i.typeName())) {
+              tag = j;
+              break;
+            }
+          }
+
+          if (tag != null) {
+            paramNode.child(toShortComment(tag));
+
+            XMLNode commentNode = new XMLNode("comment");
+            commentNode.text(toComment(tag));
+            paramNode.child(commentNode);
+          }
+        }
+
+        node.child(paramNode);
+      }
     }
 
     return node;
@@ -858,6 +895,31 @@ public final class XMLDoclet {
   }
 
   /**
+   * Generates a shortComment node for ParamTag objects (type parameters).
+   * @param  tag [description]
+   * @return     [description]
+   */
+  private static XMLNode toShortComment(ParamTag tag) {
+    if (tag.parameterComment() == null || tag.parameterComment().length() == 0) return null;
+
+    XMLNode node = new XMLNode("shortComment");
+    StringBuilder comment = new StringBuilder();
+
+    // Analyse each token and produce comment node
+    for (Tag t : tag.firstSentenceTags()) {
+      Taglet taglet = options.getTagletForName(t.name());
+      String text = taglet != null ? taglet.toString(t) : t.text();
+
+      // type parameter name is not excluded from the comment text so strip leading instance
+      text = text.replaceAll("^<" + tag.parameterName() + "([^>]*)>", "").trim();
+
+      comment.append(text);
+    }
+
+    return node.text(comment.toString());
+  }
+
+  /**
    * Transforms comments on the Doc object into XML.
    *
    * @param doc The Doc object.
@@ -906,11 +968,15 @@ public final class XMLDoclet {
         XMLNode shortNode = new XMLNode("shortDeprecated", doc, doc.position().line());
         XMLNode fullNode = new XMLNode("deprecated", doc, doc.position().line());
 
-        shortNode.text(shortText.toString());
-        fullNode.text(fullText);
+        if (shortText.toString().length() > 0) {
+          shortNode.text(shortText.toString());
+          node.child(shortNode);
+        }
 
-        node.child(shortNode);
-        node.child(fullNode);
+        if (fullText.length() > 0) {
+          fullNode.text(fullText);
+          node.child(fullNode);
+        }
       }
 
       return null;
