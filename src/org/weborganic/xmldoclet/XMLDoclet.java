@@ -411,8 +411,6 @@ public final class XMLDoclet {
           }
 
           if (tag != null) {
-            paramNode.child(toShortComment(tag));
-
             XMLNode commentNode = new XMLNode("comment");
             commentNode.text(toComment(tag));
             paramNode.child(commentNode);
@@ -889,31 +887,6 @@ public final class XMLDoclet {
       Taglet taglet = options.getTagletForName(t.name());
       if (taglet != null) comment.append(taglet.toString(t));
       else comment.append(t.text());
-    }
-
-    return node.text(comment.toString());
-  }
-
-  /**
-   * Generates a shortComment node for ParamTag objects (type parameters).
-   * @param  tag [description]
-   * @return     [description]
-   */
-  private static XMLNode toShortComment(ParamTag tag) {
-    if (tag.parameterComment() == null || tag.parameterComment().length() == 0) return null;
-
-    XMLNode node = new XMLNode("shortComment");
-    StringBuilder comment = new StringBuilder();
-
-    // Analyse each token and produce comment node
-    for (Tag t : tag.firstSentenceTags()) {
-      Taglet taglet = options.getTagletForName(t.name());
-      String text = taglet != null ? taglet.toString(t) : t.text();
-
-      // type parameter name is not excluded from the comment text so strip leading instance
-      text = text.replaceAll("^<" + tag.parameterName() + "([^>]*)>", "").trim();
-
-      comment.append(text);
     }
 
     return node.text(comment.toString());
