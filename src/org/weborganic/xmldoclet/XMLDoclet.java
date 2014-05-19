@@ -38,6 +38,7 @@ import com.sun.javadoc.SeeTag;
 import com.sun.javadoc.Tag;
 import com.sun.javadoc.Type;
 import com.sun.javadoc.ThrowsTag;
+import com.sun.javadoc.TypeVariable;
 import com.sun.tools.doclets.Taglet;
 
 /**
@@ -50,7 +51,7 @@ import com.sun.tools.doclets.Taglet;
  * @version 24 May 2013
  */
 public final class XMLDoclet {
-  public final static String VERSION = "1.3.0";
+  public final static String VERSION = "1.3.1";
 
   /**
    * The date format matching ISO 8601, easier to parse with XSLT.
@@ -290,6 +291,9 @@ public final class XMLDoclet {
     node.attribute("package",    classDoc.containingPackage().name());
     node.attribute("visibility", getVisibility(classDoc));
 
+    // generic type parameters
+    node.child(toTypeParametersNode(classDoc));
+
     // Interfaces
     ClassDoc[] interfaces = classDoc.interfaces();
     if (interfaces.length > 0) {
@@ -354,6 +358,67 @@ public final class XMLDoclet {
     // Handle inner classes
     for (ClassDoc inner : classDoc.innerClasses()) {
       node.child(toClassNode(inner));
+    }
+
+    return node;
+  }
+
+  /**
+   * Generates a child node for each generic type parameter.
+   * @param  doc [description]
+   * @return     [description]
+   */
+  private static XMLNode toTypeParametersNode(ClassDoc doc) {
+    TypeVariable[] typeParameters = doc.typeParameters();
+    ParamTag[] typeParameterTags = doc.typeParamTags();
+
+    XMLNode node = null;
+
+    if (typeParameters != null && typeParameters.length > 0) {
+      node = new XMLNode("typeParameters");
+
+      for (TypeVariable i : typeParameters) {
+        XMLNode paramNode = new XMLNode("parameter");
+        paramNode.attribute("name", i.typeName());
+
+        Type[] bounds = i.bounds();
+
+        if (bounds != null && bounds.length > 0) {
+          XMLNode boundsNode = new XMLNode("bounds");
+
+          for (Type t : bounds) {
+            XMLNode typeNode = new XMLNode("type");
+
+            typeNode.attribute("fulltype", t.toString());
+            typeNode.attribute("type", t.typeName());
+            typeNode.attribute("name", t.qualifiedTypeName());
+
+            boundsNode.child(typeNode);
+          }
+
+          paramNode.child(boundsNode);
+        }
+
+        if (typeParameterTags != null && typeParameterTags.length > 0) {
+          ParamTag tag = null;
+
+          for (ParamTag j : typeParameterTags) {
+            // take the first one
+            if (j.isTypeParameter() && j.parameterName().equals(i.typeName())) {
+              tag = j;
+              break;
+            }
+          }
+
+          if (tag != null) {
+            XMLNode commentNode = new XMLNode("comment");
+            commentNode.text(toComment(tag));
+            paramNode.child(commentNode);
+          }
+        }
+
+        node.child(paramNode);
+      }
     }
 
     return node;
@@ -876,11 +941,15 @@ public final class XMLDoclet {
         XMLNode shortNode = new XMLNode("shortDeprecated", doc, doc.position().line());
         XMLNode fullNode = new XMLNode("deprecated", doc, doc.position().line());
 
-        shortNode.text(shortText.toString());
-        fullNode.text(fullText);
+        if (shortText.toString().length() > 0) {
+          shortNode.text(shortText.toString());
+          node.child(shortNode);
+        }
 
-        node.child(shortNode);
-        node.child(fullNode);
+        if (fullText.length() > 0) {
+          fullNode.text(fullText);
+          node.child(fullNode);
+        }
       }
 
       return null;
