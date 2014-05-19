@@ -51,7 +51,7 @@ import com.sun.tools.doclets.Taglet;
  * @version 24 May 2013
  */
 public final class XMLDoclet {
-  public final static String VERSION = "1.3.0";
+  public final static String VERSION = "1.3.1";
 
   /**
    * The date format matching ISO 8601, easier to parse with XSLT.
